@@ -1,8 +1,8 @@
-import { Text, View } from "react-native";
+import { Text, View, TouchableOpacity } from "react-native";
 import DropdownPicker from "@/components/DropdownPicker";
 import { SafeAreaView } from "react-native-safe-area-context";
 // import { useState } from "react";
-
+import * as DocumentPicker from 'expo-document-picker';
 
 const teacherData = [
   {label: "Mr. Sunil", value: "Mr. Sunil"},
@@ -24,10 +24,16 @@ const classData = [
 
 
 export default function Index() {
+  function pickDocument() {
+    DocumentPicker.getDocumentAsync({}).then((result) => {
+      console.log(result);
+    });
+  }
 
   return (
     <SafeAreaView>
       <View className="h-full bg-purple-100 p-2 pt-5">
+
         <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Teacher Name</Text>
         <DropdownPicker data={teacherData}  placeholder="Select Teacher" />
 
@@ -38,9 +44,9 @@ export default function Index() {
         <DropdownPicker data={classData}  placeholder="Select Class" />
 
         <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Upload File</Text>
-        <View className="m-4 p-6 border-2 border-dashed border-purple-700 rounded-xl items-center justify-center h-40 bg-white">
+        <TouchableOpacity className="m-4 p-6 border-2 border-dashed border-purple-700 rounded-xl items-center justify-center h-40 bg-white" onPress={pickDocument}>
           <Text className="text-purple-700 text-xl font-semibold">Choose File to Upload</Text>
-        </View>
+        </TouchableOpacity>
 
 
         {/* <Text>Subject</Text>
