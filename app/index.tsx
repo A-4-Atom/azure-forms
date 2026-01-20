@@ -1,57 +1,125 @@
-import { Text, View, TouchableOpacity } from "react-native";
 import DropdownPicker from "@/components/DropdownPicker";
+import { classData, subjectData, teacherData } from "@/constants/data";
+import * as DocumentPicker from "expo-document-picker";
+import { useState } from "react";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import { useState } from "react";
-import * as DocumentPicker from 'expo-document-picker';
 
-const teacherData = [
-  {label: "Mr. Sunil", value: "Mr. Sunil"},
-  {label: "Mrs. Parul", value: "Mrs. Parul"},
-  {label: "Mrs. Rakhee", value: "Mrs. Rakhee"},
-];
-
-const subjectData = [
-  {label: "Discrete Maths", value: "Discrete Maths"},
-  {label: "Data Structures", value: "Data Structures"},
-  {label: "Core Java", value: "Core Java"},
-]
-
-const classData = [
-  {label: "MCA 1st Sem", value: "MCA 1st Sem"},
-  {label: "MCA 2nd Sem", value: "MCA 2nd Sem"},
-  {label: "MCA 3rd Sem", value: "MCA 3rd Sem"},
-]
-
+type formDataType = {
+  className: string;
+  subjectName: string;
+  teacherName: string;
+  documentUri: string;
+};
 
 export default function Index() {
+  const [formData, setFormData] = useState<formDataType>({
+    className: "",
+    subjectName: "",
+    teacherName: "",
+    documentUri: "",
+  });
+
   function pickDocument() {
-    DocumentPicker.getDocumentAsync({}).then((result) => {
-      console.log(result);
+    DocumentPicker.getDocumentAsync({}).then((documentData) => {
+      console.log(documentData);
+      if (documentData.canceled) {
+        // Handle cancel if needed
+        Alert.alert("Document selection was canceled.");
+        return;
+      } else if (
+        documentData.assets[0].mimeType !== "text/comma-separated-values"
+      ) {
+        Alert.alert("Please select a PDF document.");
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        documentUri: documentData.assets?.[0]?.uri || "",
+      }));
+    });
+  }
+
+  function updateFormData(field: keyof formDataType, value: string) {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
+
+  function handleSubmit() {
+    if (
+      formData.className === "" ||
+      formData.subjectName === "" ||
+      formData.teacherName === "" ||
+      formData.documentUri === ""
+    ) {
+      Alert.alert(
+        "Please fill all the fields and upload a document before submitting.",
+      );
+      return;
+    }
+    console.log(formData);
+    Alert.alert("Form submitted successfully!");
+    setFormData({
+      className: "",
+      subjectName: "",
+      teacherName: "",
+      documentUri: "",
     });
   }
 
   return (
     <SafeAreaView>
       <View className="h-full bg-purple-100 p-2 pt-5">
+        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">
+          Teacher Name
+        </Text>
+        <DropdownPicker
+          data={teacherData}
+          placeholder="Select Teacher"
+          value={formData.teacherName}
+          onChange={(v) => updateFormData("teacherName", v)}
+        />
 
-        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Teacher Name</Text>
-        <DropdownPicker data={teacherData}  placeholder="Select Teacher" />
+        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">
+          Subject
+        </Text>
+        <DropdownPicker
+          data={subjectData}
+          placeholder="Select Subject"
+          value={formData.subjectName}
+          onChange={(v) => updateFormData("subjectName", v)}
+        />
 
-        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Subject</Text>
-        <DropdownPicker data={subjectData}  placeholder="Select Subject" />
+        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">
+          Class Name
+        </Text>
+        <DropdownPicker
+          data={classData}
+          placeholder="Select Class"
+          value={formData.className}
+          onChange={(v) => updateFormData("className", v)}
+        />
 
-        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Class Name</Text>
-        <DropdownPicker data={classData}  placeholder="Select Class" />
-
-        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">Upload File</Text>
-        <TouchableOpacity className="m-4 p-6 border-2 border-dashed border-purple-700 rounded-xl items-center justify-center h-40 bg-white" onPress={pickDocument}>
-          <Text className="text-purple-700 text-xl font-semibold">Choose File to Upload</Text>
+        <Text className="text-2xl font-semibold px-4 mt-4 text-purple-700">
+          Upload File
+        </Text>
+        <TouchableOpacity
+          className="m-4 p-6 border-2 border-dashed border-purple-700 rounded-xl items-center justify-center h-40 bg-white"
+          onPress={pickDocument}
+        >
+          <Text className="text-purple-700 text-xl font-semibold">
+            Choose File to Upload
+          </Text>
         </TouchableOpacity>
 
-
-        {/* <Text>Subject</Text>
-        <Text>Class Name</Text>
-        <Text>Upload File</Text> */}
+        <TouchableOpacity
+          className="bg-purple-700 m-4 p-4 rounded-xl items-center justify-center mt-8"
+          onPress={handleSubmit}
+        >
+          <Text className="text-white font-semibold text-xl">Submit</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
