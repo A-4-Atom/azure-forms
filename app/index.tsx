@@ -62,7 +62,7 @@ export default function Index() {
       );
       return;
     }
-    console.log(formData);
+    // console.log(formData);
     Alert.alert("Form submitted successfully!");
     setFormData({
       className: "",
@@ -72,7 +72,8 @@ export default function Index() {
       fileName: "",
     });
     try{
-      const sasResponse = await fetch("http://192.168.1.37:7071/api/getUploadUrl", {
+      console.log("Requesting SAS URL from Azure Function...");
+      const sasResponse = await fetch("https://azureassignment.azurewebsites.net/api/getUploadUrl", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -81,7 +82,7 @@ export default function Index() {
           className: formData.className,
           subjectName: formData.subjectName,
           teacherName: formData.teacherName,
-          fileName: formData.documentUri.split("/").pop(),
+          fileName: formData.fileName,
         })
       })
       const { uploadUrl } = await sasResponse.json();
@@ -93,7 +94,8 @@ export default function Index() {
         method: "PUT",
         headers: {
           "x-ms-blob-type": "BlockBlob",
-          "Content-Type": "text/csv",
+          "x-ms-version": "2020-10-02",
+          "Content-Length": fileBlob.size.toString(),
         },
         body: fileBlob
       })
@@ -108,6 +110,7 @@ export default function Index() {
           fileName: "",
         })
       }else{
+        // console.log(uploadResponse)
         Alert.alert("Failed to upload file to Azure Blob Storage.");
       }
 

@@ -107,16 +107,13 @@ export async function GetUploadUrl(
     const blobServiceClient =
       BlobServiceClient.fromConnectionString(connectionString);
 
-    const containerClient =
-      blobServiceClient.getContainerClient(containerName);
+    const containerClient = blobServiceClient.getContainerClient(containerName);
     await containerClient.createIfNotExists();
 
-    const blobClient =
-      containerClient.getBlockBlobClient(blobName);
+    const blobClient = containerClient.getBlockBlobClient(blobName);
 
     // ---- Extract credentials (Azurite or Azure) ----
-    const { accountName, accountKey } =
-      extractCredentials(connectionString);
+    const { accountName, accountKey } = extractCredentials(connectionString);
 
     if (!accountName || !accountKey) {
       context.error("Failed to parse storage account credentials");
@@ -128,10 +125,7 @@ export async function GetUploadUrl(
       };
     }
 
-    const credential = new StorageSharedKeyCredential(
-      accountName,
-      accountKey
-    );
+    const credential = new StorageSharedKeyCredential(accountName, accountKey);
 
     // ---- Generate SAS ----
     const expiresOn = new Date();
@@ -144,10 +138,19 @@ export async function GetUploadUrl(
         permissions: BlobSASPermissions.parse("cw"),
         expiresOn,
       },
-      credential
+      credential,
     ).toString();
 
-    const uploadUrl = `${blobClient.url}?${sasToken}`;
+    let uploadUrl = `${blobClient.url}?${sasToken}`;
+
+    // ---- Rewrite localhost URL to LAN IP for mobile access ----
+    const lanIp = process.env.LAN_IP;
+
+    if (lanIp) {
+      uploadUrl = uploadUrl
+        .replace("127.0.0.1", lanIp)
+        .replace("localhost", lanIp);
+    }
 
     return {
       status: 200,
