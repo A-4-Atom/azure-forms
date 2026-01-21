@@ -10,6 +10,7 @@ type formDataType = {
   subjectName: string;
   teacherName: string;
   documentUri: string;
+  fileName: string;
 };
 
 export default function Index() {
@@ -18,11 +19,12 @@ export default function Index() {
     subjectName: "",
     teacherName: "",
     documentUri: "",
+    fileName: "",
   });
 
   function pickDocument() {
     DocumentPicker.getDocumentAsync({}).then((documentData) => {
-      console.log(documentData);
+      // console.log(documentData);
       if (documentData.canceled) {
         // Handle cancel if needed
         Alert.alert("Document selection was canceled.");
@@ -30,12 +32,13 @@ export default function Index() {
       } else if (
         documentData.assets[0].mimeType !== "text/comma-separated-values"
       ) {
-        Alert.alert("Please select a PDF document.");
+        Alert.alert("Please select a CSV document.");
         return;
       }
       setFormData((prev) => ({
         ...prev,
         documentUri: documentData.assets?.[0]?.uri || "",
+        fileName: documentData.assets?.[0]?.name || "",
       }));
     });
   }
@@ -47,7 +50,7 @@ export default function Index() {
     }));
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (
       formData.className === "" ||
       formData.subjectName === "" ||
@@ -66,7 +69,54 @@ export default function Index() {
       subjectName: "",
       teacherName: "",
       documentUri: "",
+      fileName: "",
     });
+    try{
+      const sasResponse = await fetch("http://192.168.1.37:7071/api/getUploadUrl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          className: formData.className,
+          subjectName: formData.subjectName,
+          teacherName: formData.teacherName,
+          fileName: formData.documentUri.split("/").pop(),
+        })
+      })
+      const { uploadUrl } = await sasResponse.json();
+      console.log("Upload URL: ", uploadUrl);
+
+      const fileBlob = await fetch(formData.documentUri).then(res => res.blob());
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
+          "Content-Type": "text/csv",
+        },
+        body: fileBlob
+      })
+
+      if(uploadResponse.ok){
+        Alert.alert("File uploaded successfully to Azure Blob Storage.");
+        setFormData({
+          className: "",
+          subjectName: "",
+          teacherName: "",
+          documentUri: "",
+          fileName: "",
+        })
+      }else{
+        Alert.alert("Failed to upload file to Azure Blob Storage.");
+      }
+
+
+    }catch (error){
+      console.error("Error during form submission: ", error);
+      Alert.alert("Error submitting the form. Please try again. " + error);
+    }
+
   }
 
   return (
@@ -110,7 +160,7 @@ export default function Index() {
           onPress={pickDocument}
         >
           <Text className="text-purple-700 text-xl font-semibold">
-            Choose File to Upload
+            {formData.fileName ? formData.fileName : "Tap to select a CSV document"}
           </Text>
         </TouchableOpacity>
 
