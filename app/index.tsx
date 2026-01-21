@@ -71,24 +71,29 @@ export default function Index() {
       documentUri: "",
       fileName: "",
     });
-    try{
-      console.log("Requesting SAS URL from Azure Function...");
-      const sasResponse = await fetch("https://azureassignment.azurewebsites.net/api/getUploadUrl", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    try {
+      // console.log("Requesting SAS URL from Azure Function...");
+      const sasResponse = await fetch(
+        "https://azureassignment.azurewebsites.net/api/getUploadUrl",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            className: formData.className,
+            subjectName: formData.subjectName,
+            teacherName: formData.teacherName,
+            fileName: formData.fileName,
+          }),
         },
-        body: JSON.stringify({
-          className: formData.className,
-          subjectName: formData.subjectName,
-          teacherName: formData.teacherName,
-          fileName: formData.fileName,
-        })
-      })
+      );
       const { uploadUrl } = await sasResponse.json();
-      console.log("Upload URL: ", uploadUrl);
+      // console.log("Upload URL: ", uploadUrl);
 
-      const fileBlob = await fetch(formData.documentUri).then(res => res.blob());
+      const fileBlob = await fetch(formData.documentUri).then((res) =>
+        res.blob(),
+      );
 
       const uploadResponse = await fetch(uploadUrl, {
         method: "PUT",
@@ -96,11 +101,14 @@ export default function Index() {
           "x-ms-blob-type": "BlockBlob",
           "x-ms-version": "2020-10-02",
           "Content-Length": fileBlob.size.toString(),
+          "x-ms-meta-classname": formData.className,
+          "x-ms-meta-subjectname": formData.subjectName,
+          "x-ms-meta-teachername": formData.teacherName,
         },
-        body: fileBlob
-      })
+        body: fileBlob,
+      });
 
-      if(uploadResponse.ok){
+      if (uploadResponse.ok) {
         Alert.alert("File uploaded successfully to Azure Blob Storage.");
         setFormData({
           className: "",
@@ -108,18 +116,15 @@ export default function Index() {
           teacherName: "",
           documentUri: "",
           fileName: "",
-        })
-      }else{
+        });
+      } else {
         // console.log(uploadResponse)
         Alert.alert("Failed to upload file to Azure Blob Storage.");
       }
-
-
-    }catch (error){
+    } catch (error) {
       console.error("Error during form submission: ", error);
       Alert.alert("Error submitting the form. Please try again. " + error);
     }
-
   }
 
   return (
@@ -163,7 +168,9 @@ export default function Index() {
           onPress={pickDocument}
         >
           <Text className="text-purple-700 text-xl font-semibold">
-            {formData.fileName ? formData.fileName : "Tap to select a CSV document"}
+            {formData.fileName
+              ? formData.fileName
+              : "Tap to select a CSV document"}
           </Text>
         </TouchableOpacity>
 
