@@ -34,6 +34,7 @@ A React Native mobile application for teachers to upload student marks via CSV f
    ```
 
 2. Install dependencies for Azure Functions:
+
    ```bash
    cd azure-functions
    npm install
@@ -60,10 +61,6 @@ Then open the app on:
 cd azure-functions
 npm start
 ```
-
-## CSV Format
-
-The uploaded CSV file should have the following columns:
 
 ## CSV Format
 
