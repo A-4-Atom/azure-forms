@@ -1,50 +1,82 @@
-# Welcome to your Expo app 👋
+# Azure Forms - Student Marks Upload App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A React Native mobile application for teachers to upload student marks via CSV files. The app uses Azure services for storage and data management.
 
-## Get started
+## Features
 
-1. Install dependencies
+- Upload student marks in CSV format
+- Select teacher, subject, and class from dropdowns
+- Automatic file processing and storage in Azure
+- Data stored in Cosmos DB for easy retrieval
+
+## Tech Stack
+
+- **Frontend**: React Native with Expo
+- **Styling**: NativeWind (Tailwind CSS)
+- **Backend**: Azure Functions (TypeScript)
+- **Storage**: Azure Blob Storage
+- **Database**: Azure Cosmos DB
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js installed
+- Expo CLI
+- Azure account (for backend services)
+
+### Installation
+
+1. Install dependencies for the mobile app:
 
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. Install dependencies for Azure Functions:
    ```bash
-   npx expo start
+   cd azure-functions
+   npm install
+   cd ..
    ```
 
-In the output, you'll find options to open the app in a
+### Running the App
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Start the Expo development server:
 
 ```bash
-npm run reset-project
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Then open the app on:
 
-## Learn more
+- Android emulator
+- iOS simulator
+- Expo Go app on your phone
 
-To learn more about developing your project with Expo, look at the following resources:
+### Running Azure Functions Locally
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+cd azure-functions
+npm start
+```
 
-## Join the community
+## CSV Format
 
-Join our community of developers creating universal apps.
+The uploaded CSV file should have the following columns:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## CSV Format
+
+The uploaded CSV file should have the following columns:
+
+- `rollNo` - Student roll number
+- `name` - Student name
+- `obtainedMarks` - Marks obtained
+- `totalMarks` - Total marks
+
+## Project Structure
+
+- `/app` - React Native app screens
+- `/components` - Reusable UI components
+- `/azure-functions` - Backend Azure Functions
+- `/constants` - App data and constants
