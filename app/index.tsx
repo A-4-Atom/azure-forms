@@ -74,7 +74,7 @@ export default function Index() {
     try {
       // console.log("Requesting SAS URL from Azure Function...");
       const sasResponse = await fetch(
-        "https://azureassignment.azurewebsites.net/api/getUploadUrl",
+        "https://assignmentfunctionapp.azurewebsites.net/api/getUploadUrl",
         {
           method: "POST",
           headers: {
