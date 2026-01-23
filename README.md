@@ -73,7 +73,8 @@ Then open the app on:
 
 ```bash
 cd azure-functions
-npm start
+npm install
+func start
 ```
 
 ## CSV Format
