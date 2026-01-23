@@ -2,6 +2,20 @@
 
 A React Native mobile application for teachers to upload student marks via CSV files. The app uses Azure services for storage and data management.
 
+## Screenshots
+
+### Mobile App
+
+![App Screenshot](assets/images/index-screen.jpeg)
+
+### Azure Services
+
+<div>
+  <img src="assets/images/blob-storage.jpg" alt="Azure Blob Storage" width="400"/>
+  <img src="assets/images/cosmos-db.jpg" alt="Cosmos DB" width="400"/>
+  <img src="assets/images/function-app.jpg" alt="Azure Function App" width="400"/>
+</div>
+
 ## Features
 
 - Upload student marks in CSV format
