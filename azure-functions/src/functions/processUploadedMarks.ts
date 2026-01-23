@@ -17,7 +17,6 @@ export async function processUploadedMarks(
   const blobName = context.triggerMetadata.name;
   context.log(`Processing uploaded file: ${blobName}`);
 
-  // ---- Read metadata from blob ----
   const metadata = (context.triggerMetadata.metadata || {}) as Record<string, unknown>;
 
   const className = metadata.classname as string | undefined;
@@ -25,13 +24,12 @@ export async function processUploadedMarks(
   const teacherName = metadata.teachername as string | undefined;
 
   if (!className || !subjectName || !teacherName) {
-    context.log("❌ Missing metadata. Skipping file processing.");
+    context.log("Missing metadata. Skipping file processing.");
     return;
   }
 
   context.log("Metadata received:", { className, subjectName, teacherName });
 
-  // ---- Parse CSV file ----
   const csvText = blob.toString("utf-8");
 
   const records = parse(csvText, {
@@ -42,7 +40,6 @@ export async function processUploadedMarks(
 
   context.log(`Parsed ${records.length} student records`);
 
-  // ---- Connect to Cosmos DB ----
   const client = new CosmosClient({
     endpoint: process.env.COSMOS_ENDPOINT!,
     key: process.env.COSMOS_KEY!,
@@ -54,7 +51,6 @@ export async function processUploadedMarks(
 
   const uploadedAt = new Date().toISOString();
 
-  // ---- Insert each row into Cosmos DB ----
   for (const row of records) {
     const typedRow = row as StudentRecord;
     const rollNo = typedRow.rollNo;
@@ -66,7 +62,7 @@ export async function processUploadedMarks(
       totalMarks > 0 ? (obtainedMarks / totalMarks) * 100 : 0;
 
     const document = {
-      id: `${className}_${subjectName}_${rollNo}`,   // unique id
+      id: `${className}_${subjectName}_${rollNo}`,
 
       className,
       subjectName,
@@ -84,11 +80,10 @@ export async function processUploadedMarks(
     await container.items.create(document);
   }
 
-  context.log("✅ All student records successfully inserted into Cosmos DB");
+  context.log("All student records successfully inserted into Cosmos DB");
 }
 
 
-// ---- Register Blob Trigger ----
 app.storageBlob("storageBlobTrigger1", {
   path: "uploads/{name}",
   connection: "AzureWebJobsStorage",

@@ -19,7 +19,6 @@ interface UploadUrlRequest {
 }
 
 function extractCredentials(connectionString: string) {
-  // Case 1: Azurite shortcut
   if (connectionString === "UseDevelopmentStorage=true") {
     return {
       accountName: "devstoreaccount1",
@@ -28,7 +27,6 @@ function extractCredentials(connectionString: string) {
     };
   }
 
-  // Case 2: Real Azure connection string
   const parts = connectionString.split(";");
   const map: Record<string, string> = {};
 
@@ -55,7 +53,6 @@ export async function GetUploadUrl(
     const { className, subjectName, teacherName, fileName } =
       body as UploadUrlRequest;
 
-    // ---- Validation ----
     if (
       typeof className !== "string" ||
       typeof subjectName !== "string" ||
@@ -80,7 +77,6 @@ export async function GetUploadUrl(
       };
     }
 
-    // ---- Sanitize Inputs ----
     const sanitize = (str: string) => str.replace(/[^a-zA-Z0-9._-]/g, "_");
     const safeClassName = sanitize(className);
     const safeSubjectName = sanitize(subjectName);
@@ -90,7 +86,6 @@ export async function GetUploadUrl(
 
     const blobName = `${safeClassName}_${safeSubjectName}_${safeTeacherName}_${timestamp}_${safeFileName}`;
 
-    // ---- Storage Setup ----
     const containerName = process.env.BLOB_CONTAINER_NAME || "uploads";
     const connectionString = process.env.AzureWebJobsStorage;
 
@@ -112,7 +107,6 @@ export async function GetUploadUrl(
 
     const blobClient = containerClient.getBlockBlobClient(blobName);
 
-    // ---- Extract credentials (Azurite or Azure) ----
     const { accountName, accountKey } = extractCredentials(connectionString);
 
     if (!accountName || !accountKey) {
@@ -127,7 +121,6 @@ export async function GetUploadUrl(
 
     const credential = new StorageSharedKeyCredential(accountName, accountKey);
 
-    // ---- Generate SAS ----
     const expiresOn = new Date();
     expiresOn.setMinutes(expiresOn.getMinutes() + 10);
 
@@ -143,14 +136,6 @@ export async function GetUploadUrl(
 
     let uploadUrl = `${blobClient.url}?${sasToken}`;
 
-    // ---- Rewrite localhost URL to LAN IP for mobile access ----
-    const lanIp = process.env.LAN_IP;
-
-    if (lanIp) {
-      uploadUrl = uploadUrl
-        .replace("127.0.0.1", lanIp)
-        .replace("localhost", lanIp);
-    }
 
     return {
       status: 200,
