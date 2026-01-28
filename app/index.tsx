@@ -1,3 +1,4 @@
+import ConfirmScreen from "@/components/ConfirmScreen";
 import DropdownPicker from "@/components/DropdownPicker";
 import { classData, subjectData, teacherData } from "@/constants/data";
 import * as DocumentPicker from "expo-document-picker";
@@ -21,6 +22,7 @@ export default function Index() {
     documentUri: "",
     fileName: "",
   });
+  const [showModal, setShowModal] = useState(false);
 
   function pickDocument() {
     DocumentPicker.getDocumentAsync({}).then((documentData) => {
@@ -62,24 +64,14 @@ export default function Index() {
       );
       return;
     }
-    // console.log(formData);
-    Alert.alert("Form submitted successfully!");
-    setFormData({
-      className: "",
-      subjectName: "",
-      teacherName: "",
-      documentUri: "",
-      fileName: "",
-    });
+
     try {
-      // console.log("Requesting SAS URL from Azure Function...");
+      // 1️⃣ Request SAS URL
       const sasResponse = await fetch(
         "https://assignmentfunctionapp.azurewebsites.net/api/getUploadUrl",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             className: formData.className,
             subjectName: formData.subjectName,
@@ -88,9 +80,15 @@ export default function Index() {
           }),
         },
       );
-      const { uploadUrl } = await sasResponse.json();
-      // console.log("Upload URL: ", uploadUrl);
 
+      if (!sasResponse.ok) {
+        Alert.alert("Failed to get upload URL");
+        return;
+      }
+
+      const { uploadUrl, blobName } = await sasResponse.json();
+
+      // 2️⃣ Upload file to Blob Storage
       const fileBlob = await fetch(formData.documentUri).then((res) =>
         res.blob(),
       );
@@ -101,29 +99,57 @@ export default function Index() {
           "x-ms-blob-type": "BlockBlob",
           "x-ms-version": "2020-10-02",
           "Content-Length": fileBlob.size.toString(),
-          "x-ms-meta-classname": formData.className,
-          "x-ms-meta-subjectname": formData.subjectName,
-          "x-ms-meta-teachername": formData.teacherName,
         },
         body: fileBlob,
       });
 
-      if (uploadResponse.ok) {
-        Alert.alert("File uploaded successfully to Azure Blob Storage.");
-        setFormData({
-          className: "",
-          subjectName: "",
-          teacherName: "",
-          documentUri: "",
-          fileName: "",
-        });
-      } else {
-        // console.log(uploadResponse)
+      if (!uploadResponse.ok) {
         Alert.alert("Failed to upload file to Azure Blob Storage.");
+        return;
       }
+
+      // 3️⃣ Call PROCESS CSV HTTP FUNCTION
+      const processResponse = await fetch(
+        "https://assignmentfunctionapp.azurewebsites.net/api/processUploadedMarksHttp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blobName,
+            className: formData.className,
+            subjectName: formData.subjectName,
+            teacherName: formData.teacherName,
+          }),
+        },
+      );
+
+      if (processResponse.status === 409) {
+        Alert.alert("This file has already been processed.");
+        return;
+      }
+
+      if (!processResponse.ok && processResponse.status !== 202) {
+        Alert.alert("Failed to start CSV processing.");
+        return;
+      }
+
+      // ✅ Success UX
+      Alert.alert(
+        "Upload successful",
+        "Marks are being processed. You can check the results shortly.",
+      );
+
+      // Reset form
+      setFormData({
+        className: "",
+        subjectName: "",
+        teacherName: "",
+        documentUri: "",
+        fileName: "",
+      });
     } catch (error) {
-      console.error("Error during form submission: ", error);
-      Alert.alert("Error submitting the form. Please try again. " + error);
+      console.error("Error during submission:", error);
+      Alert.alert("Something went wrong. Please try again.");
     }
   }
 
@@ -176,10 +202,17 @@ export default function Index() {
 
         <TouchableOpacity
           className="bg-purple-700 m-4 p-4 rounded-xl items-center justify-center mt-8"
-          onPress={handleSubmit}
+          onPress={() => setShowModal(true)}
         >
           <Text className="text-white font-semibold text-xl">Submit</Text>
         </TouchableOpacity>
+
+        <ConfirmScreen
+          showModal={showModal}
+          setShowModal={setShowModal}
+          formData={formData}
+          handleSubmit={handleSubmit}
+        />
       </View>
     </SafeAreaView>
   );
