@@ -67,7 +67,7 @@ export default function Index() {
 
     try {
       const sasResponse = await fetch(
-        "https://assignmentfunctionapp.azurewebsites.net/api/getUploadUrl",
+        process.env.AZURE_GET_UPLOAD_URL || "",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -107,7 +107,7 @@ export default function Index() {
       }
 
       const processResponse = await fetch(
-        "https://assignmentfunctionapp.azurewebsites.net/api/processUploadedMarksHttp",
+        process.env.AZURE_PROCESS_UPLOADED_MARKS_URL || "",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
