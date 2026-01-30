@@ -66,7 +66,6 @@ export default function Index() {
     }
 
     try {
-      // 1️⃣ Request SAS URL
       const sasResponse = await fetch(
         "https://assignmentfunctionapp.azurewebsites.net/api/getUploadUrl",
         {
@@ -88,7 +87,6 @@ export default function Index() {
 
       const { uploadUrl, blobName } = await sasResponse.json();
 
-      // 2️⃣ Upload file to Blob Storage
       const fileBlob = await fetch(formData.documentUri).then((res) =>
         res.blob(),
       );
@@ -108,7 +106,6 @@ export default function Index() {
         return;
       }
 
-      // 3️⃣ Call PROCESS CSV HTTP FUNCTION
       const processResponse = await fetch(
         "https://assignmentfunctionapp.azurewebsites.net/api/processUploadedMarksHttp",
         {
@@ -133,7 +130,6 @@ export default function Index() {
         return;
       }
 
-      // ✅ Success UX
       Alert.alert(
         "Upload successful",
         "Marks are being processed. You can check the results shortly.",
