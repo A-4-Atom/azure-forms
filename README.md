@@ -6,7 +6,10 @@ A React Native mobile application for teachers to upload student marks via CSV f
 
 ### Mobile App
 
-![App Screenshot](assets/images/index-screen.jpeg)
+<div>
+   <img src="assets/images/index-screen.jpeg" width=300>
+   <img src="assets/images/confirm-screen.jpeg" width=300>
+</div>
 
 ### Azure Services
 

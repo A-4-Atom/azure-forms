@@ -27,7 +27,6 @@ export async function processUploadedMarksHttp(
   context: InvocationContext,
 ): Promise<HttpResponseInit> {
   try {
-    // ---------- 1. Parse & validate request ----------
     const body = (await request.json()) as ProcessCsvRequest;
 
     const { blobName, className, subjectName, teacherName } = body;
@@ -42,7 +41,6 @@ export async function processUploadedMarksHttp(
       };
     }
 
-    // ---------- 2. Cosmos DB setup ----------
     const cosmosClient = new CosmosClient({
       endpoint: process.env.COSMOS_ENDPOINT!,
       key: process.env.COSMOS_KEY!,
@@ -60,7 +58,6 @@ export async function processUploadedMarksHttp(
       "csvProcessingStatus",
     );
 
-    // ---------- 3. Idempotency / duplicate check ----------
     const statusId = blobName;
 
     try {
@@ -88,7 +85,6 @@ export async function processUploadedMarksHttp(
       // Item does not exist → OK to proceed
     }
 
-    // ---------- 4. Mark status = processing ----------
     await statusContainer.items.create({
       id: statusId,
       blobName,
@@ -99,7 +95,6 @@ export async function processUploadedMarksHttp(
       startedAt: new Date().toISOString(),
     });
 
-    // ---------- 5. Read blob from Blob Storage ----------
     const blobServiceClient = BlobServiceClient.fromConnectionString(
       process.env.AzureWebJobsStorage!,
     );
@@ -120,7 +115,6 @@ export async function processUploadedMarksHttp(
 
     const csvText = csvBuffer.toString("utf-8");
 
-    // ---------- 6. Parse CSV ----------
     const records = parse(csvText, {
       columns: true,
       skip_empty_lines: true,
@@ -131,7 +125,6 @@ export async function processUploadedMarksHttp(
       throw new Error("CSV file is empty");
     }
 
-    // ---------- 7. Insert student marks ----------
     const uploadedAt = new Date().toISOString();
 
     for (const row of records) {
@@ -159,7 +152,6 @@ export async function processUploadedMarksHttp(
       await marksContainer.items.upsert(document);
     }
 
-    // ---------- 8. Mark status = processed ----------
     await statusContainer
       .item(statusId, blobName)
       .replace({
@@ -181,7 +173,6 @@ export async function processUploadedMarksHttp(
   } catch (err: any) {
     context.error("processUploadedMarksHttp error:", err);
 
-    // Try to mark status as failed
     try {
       const body = (await request.json()) as ProcessCsvRequest;
       if (body?.blobName) {
@@ -214,7 +205,6 @@ export async function processUploadedMarksHttp(
   }
 }
 
-// ---------- Helper ----------
 async function streamToBuffer(
   readableStream: NodeJS.ReadableStream,
 ): Promise<Buffer> {
